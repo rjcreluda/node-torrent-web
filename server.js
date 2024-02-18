@@ -10,12 +10,14 @@ var os = require('os');
 var del = require('del');
 var mime = require('mime');
 var archiver = require('archiver');
+const path = require('path');
 
 var client, url;
+const tmp = path.join(__dirname, 'tmp');
 
-var DIR = os.tmpdir()+'/torrent-web-poc';
-var PORT = parseArg('--port') || parseArg('-p') || process.env.PORT || 80;
-
+//var DIR = os.tmpdir();+'/torrent-web-poc';
+var DIR = './tmp/torrent-web-poc';
+var PORT = 8080 || process.env.PORT;
 server.listen(PORT);
 app.use(express.static(__dirname + '/public'));
 console.log('Torrent Web started on port '+PORT+' ...');
@@ -25,11 +27,16 @@ console.log('Torrent Web started on port '+PORT+' ...');
 //===============================
 
 io.on('connection', function (socket) {
-	console.log('New socket connection.');
+	console.log('New socket connection. ' + new Date().toISOString());
 	if (client && client.files.length) socket.emit('torrent', torrentRepresentation());
 	else socket.emit('no-torrent');
 	socket.on('add-torrent', addTorrent);
 	socket.on('remove-torrent', removeTorrent);
+});
+
+// Route to render the HTML page
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'main.html'));
 });
 
 app.get('/torrent/:filename', function(req, res) {
@@ -71,6 +78,7 @@ function findFile(filename) {
 function addTorrent(incoming) {
 	removeTorrent();
 	url = incoming;
+	console.log('Adding torrent ... ');
 	if (url.indexOf('magnet:') === 0) createTorrentEngine(url);
 	else {
 		request.get(url, function(err, res, body) {
@@ -116,11 +124,14 @@ function deleteFiles() {
 
 function createTorrentEngine(torrent) {
 	try {
+	    console.log('createTorrentEngine() ...')
 		client = torrentStream(torrent, {
 			uploads: 3,
 			connections: 30,
-			path: DIR
+			path: DIR, 
+			tmp: tmp
 		});
+		console.log('Client created! waiting for client to be ready ...');
 		client.ready(torrentReady);
 	}
 
@@ -131,6 +142,7 @@ function createTorrentEngine(torrent) {
 }
 
 function torrentReady() {
+    console.log('Client ready :)');
 	io.emit('torrent', torrentRepresentation());
 	console.log('client:', client);
 }

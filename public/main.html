@@ -1,0 +1,65 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Torrent to direct download</title>
+        <link rel="icon" type="image/png" href="logo.png">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+        <link rel="stylesheet" href="style.css">
+
+    </head>
+    <body>
+        <div id="app" class="container" >
+            <div class="row">
+                <div class="col-md-10">
+                    <div v-if="currentPage === 'add-page'" class="add-page" v-bind:class="{'panels': true}">
+                        <h1>START</h1>
+                        <form @submit.prevent="add" class="torrent-input-box">
+                            <div class="form-group row">
+                                <label class="col-md-3">Torrent or Magnet link</label>
+                                <div class="col-md-8">
+                                    <input type="text" class="form-control" v-model="m.url">
+                                </div>
+                                <div class="col-md-1">
+                                    <button class="btn btn-outline-primary" type="submit">Go</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+        
+                    <div v-else-if="currentPage === 'loading-page'" class="loading-page" v-bind:class="{'panels': true}">
+                        <div>Progress</div>
+                        <span>Fetching Torrent Metadata...</span>
+                    </div>
+        
+                    <div v-else-if="currentPage === 'torrents-page'" class="torrents-page" v-bind:class="{'panels': true}">
+                        <div class="display-4">
+                            <button :href="'torrent'" class="md-icon-button zip-download" aria-label="Download as zip">
+                                <span>Download as Zip</span>
+                                <span class="material-icons">file_download</span>
+                            </button>
+                            {{ m.torrent.name }}
+                        </div>
+                        <div class="torrent" v-for="file in m.torrent.files" :key="file.name">
+                            <a :href="'torrent/' + file.name" target="_blank" class="btn" aria-label="Open in browser">
+                                <md-icon class="material-icons">open_in_new</md-icon>
+                            </a>
+                            <a flex class="filename" :href="'torrent/' + file.name" :download="file.name">{{ file.name }}</a>
+                            <span>{{ size(file.length, 1) }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-outline-primary" aria-label="Cancel" @click="back" v-if="m.torrent || m.submitting">
+                        Go Back. Stops torrent
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+        <script src="app.js"></script>
+    </body>
+</html>
