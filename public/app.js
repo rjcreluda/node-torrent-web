@@ -1,7 +1,7 @@
 
 Vue.config.productionTip = false;
 
-var socket = io('http://torrent-web.ixra1300.odns.fr');
+var socket = io();
 
 socket.on('torrent', function(torrent) {
   app.m.url = '';
